@@ -25,7 +25,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -Wall -std=c++11")
 
 ########## inc/libs/exe/features Starts Here ######################
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-CUDA_ADD_EXECUTABLE(${PROJECT_NAME} test_cg.cu test_cg_kernel.cu)
+CUDA_ADD_EXECUTABLE(${PROJECT_NAME} test_cg.cu)
 
 ##add features to the library -> require it to compile with cuda c++11
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
