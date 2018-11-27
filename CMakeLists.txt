@@ -13,8 +13,9 @@ SET(CUDA_SEPARABLE_COMPILATION ON)
 ########## Libraries/flags Starts Here ######################
 find_package(CUDA REQUIRED)
 include_directories("${CUDA_INCLUDE_DIRS}")
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -lineinfo; -std=c++11; -expt-extended-lambda; -O3; -use_fast_math; -rdc=true;)
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode=arch=compute_70,code=sm_70) #for TITAN V
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -lineinfo; -std=c++11; -expt-extended-lambda; -O3; -use_fast_math; -rdc=true)
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -gencode=arch=compute_70,code=sm_70) #for TITAN V
+string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_70,code=sm_70 --cudart shared")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -Wall -std=c++11")
 ########## Libraries/flags Ends Here ######################
