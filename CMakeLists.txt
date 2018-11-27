@@ -1,7 +1,4 @@
-
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
-
-#cmake_policy(SET CMP0077 OLD)
 
 set(PROJECT_NAME "test_cg")
 project(${PROJECT_NAME} LANGUAGES CXX CUDA)  
@@ -16,7 +13,7 @@ SET(CUDA_SEPARABLE_COMPILATION ON)
 ########## Libraries/flags Starts Here ######################
 find_package(CUDA REQUIRED)
 include_directories("${CUDA_INCLUDE_DIRS}")
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -lineinfo; -std=c++11; -expt-extended-lambda; -O3; -use_fast_math; -rdc=true)
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -lineinfo; -std=c++11; -expt-extended-lambda; -O3; -use_fast_math; -rdc=true;)
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode=arch=compute_70,code=sm_70) #for TITAN V
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -Wall -std=c++11")
@@ -36,5 +33,5 @@ set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE  ON)
 ##enable the separate compilation on both device and host sides 
 set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} cuda)
+target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cudadevrt_LIBRARY})
 ########## inc/libs/exe/features Ends Here ######################

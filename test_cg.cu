@@ -25,26 +25,6 @@ inline void HandleError(cudaError_t err, const char *file, int line) {
 #define CUDA_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
 //******************************************************************************
 
-//********************** Get Cuda Arch
-__global__ void get_cude_arch_k(int*d_arch){
-
-#if defined(__CUDA_ARCH__)
-	*d_arch = __CUDA_ARCH__;
-#else
-	*d_arch = 0;
-#endif
-}
-inline int cuda_arch(){
-	int*d_arch = 0;
-	CUDA_ERROR(cudaMalloc((void**)&d_arch, sizeof(int)));
-	get_cude_arch_k << < 1, 1 >> >(d_arch);
-	int h_arch = 0;
-	CUDA_ERROR(cudaMemcpy(&h_arch, d_arch, sizeof(int), cudaMemcpyDeviceToHost));
-	cudaFree(d_arch);
-	return h_arch;
-}
-//******************************************************************************
-
 
 //********************** testing cg kernel 
 __global__ void testing_cg_grid_sync(const uint32_t num_elements,
@@ -56,7 +36,10 @@ __global__ void testing_cg_grid_sync(const uint32_t num_elements,
 
 		uint32_t my_element = d_arr[tid];
 				
+		//to sync across the whole grid 
 		cg::grid_group barrier = cg::this_grid();
+
+		//to sync within a single block 
 		//cg::thread_block barrier = cg::this_thread_block();
 
 		//wait for all reads 
@@ -72,19 +55,9 @@ __global__ void testing_cg_grid_sync(const uint32_t num_elements,
 
 //********************** execute  
 void execute_test(const int sm_count){
-
-	//check cuda arc	
-	//int my_cuda_arch = cuda_arch(); 
-	//if (my_cuda_arch< 600){
-	//	printf("\n ERROR: with compute capability < 600, cooperative groups"
-	//		"can not sync across blocks.");
-	//	exit(EXIT_FAILURE);
-	//}else{
-	//	printf("\n __CUDA_ARCH__ = %d", my_cuda_arch);
-	//}
-
+	
 	//host array 
-	const uint32_t arr_size = 1 << 20;
+	const uint32_t arr_size = 1 << 20; //1M 
 	uint32_t* h_arr = (uint32_t*)malloc(arr_size * sizeof(uint32_t));
 	//with with sequential numbers
 	std::iota(h_arr, h_arr + arr_size, 0);
@@ -97,6 +70,10 @@ void execute_test(const int sm_count){
 
 	//launch config
 	const int threads = 512;
+
+	//following the same steps done in conjugateGradientMultiBlockCG.cu 
+	//cuda sample to launch kernel that sync across grid 
+	//https://github.com/NVIDIA/cuda-samples/blob/master/Samples/conjugateGradientMultiBlockCG/conjugateGradientMultiBlockCG.cu#L436
 
 	int num_blocks_per_sm = 0;
 	CUDA_ERROR(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&num_blocks_per_sm,
