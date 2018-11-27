@@ -48,7 +48,8 @@ __global__ void testing_cg_grid_sync(const uint32_t num_elements,
 		uint32_t tar_id = num_elements - tid - 1;
 
 		d_arr[tar_id] = my_element;
-	}	
+	}
+	return;
 }
 //******************************************************************************
 
@@ -57,7 +58,8 @@ __global__ void testing_cg_grid_sync(const uint32_t num_elements,
 void execute_test(const int sm_count){
 	
 	//host array 
-	const uint32_t arr_size = 1 << 20; //1M 
+	//const uint32_t arr_size = 1 << 20; //1M 
+	const uint32_t arr_size = 1680*80;
 	uint32_t* h_arr = (uint32_t*)malloc(arr_size * sizeof(uint32_t));
 	//with with sequential numbers
 	std::iota(h_arr, h_arr + arr_size, 0);
@@ -69,7 +71,7 @@ void execute_test(const int sm_count){
 		cudaMemcpyHostToDevice));
 
 	//launch config
-	const int threads = 512;
+	const int threads = 80;
 
 	//following the same steps done in conjugateGradientMultiBlockCG.cu 
 	//cuda sample to launch kernel that sync across grid 
@@ -81,9 +83,20 @@ void execute_test(const int sm_count){
 
 	dim3 grid_dim(sm_count * num_blocks_per_sm, 1, 1), block_dim(threads, 1, 1);
 
-	printf("\n Launching %d blcoks, each containing %d threads", grid_dim.x,
+	printf("\n Launching %d blcoks, each containing %d threads \n", grid_dim.x,
 		block_dim.x);
-	
+
+	if(arr_size > grid_dim.x*block_dim.x){
+         printf("\n The grid size (numBlocks*numThreads) is less than array size.\n");
+         printf("This will result into mismatch error (incorrect output erro)\n");
+         exit(EXIT_FAILURE);
+    }
+
+    if((int(grid_dim.x*block_dim.x) - int(arr_size)) / threads > 0 ){
+    	printf("\n At least one block might not see the sync barrier. This will (probabily) result into the code never exits.\n");
+    	exit(EXIT_FAILURE);
+    }
+		
 	//argument passed to the kernel 	
 	void *kernel_args[] = {		
 		(void *)&arr_size,
